@@ -174,15 +174,57 @@ select option{background:#0f172a;color:var(--txt);}
            font-weight:600;text-transform:uppercase;letter-spacing:.07em;}
 
 /* Charts */
-.charts-grid{padding:22px 32px;display:grid;
-             grid-template-columns:1fr 1fr;gap:16px;}
-.chart-card{
-  background:var(--bg-card);border:1px solid var(--border);
-  border-radius:16px;padding:6px;backdrop-filter:blur(10px);
-  transition:background .3s;
+/* --- Unified Chart Grid & Centering --- */
+
+.charts-grid {
+  padding: 22px 32px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
 }
-.chart-card:hover{background:rgba(255,255,255,.065);}
-.chart-card-full{grid-column:1 / -1;}
+
+/* 1. Main Card Styling - Acts as a Flexbox Centering Container */
+.chart-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  backdrop-filter: blur(10px);
+  transition: background .3s;
+  
+  /* Flexbox Centering */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.chart-card:hover {
+  background: rgba(255, 255, 255, .065);
+}
+
+.chart-card-full {
+  grid-column: 1 / -1;
+}
+
+/* 2. Force Shiny's Wrapper to center its contents */
+.chart-card > div,
+.html-widget,
+.shiny-html-output {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
+}
+
+/* 3. Force Plotly to anchor in the exact middle of the wrapper */
+.js-plotly-plot, 
+.plot-container {
+  margin: 0 auto !important;
+}
 
 ::-webkit-scrollbar{width:5px;height:5px;}
 ::-webkit-scrollbar-track{background:transparent;}
@@ -211,12 +253,13 @@ def compute_kpis(df):
 
 def dl(fig, title="", height=370):
     fig.update_layout(
+        autosize=True, # Forces the graph to fill the container width
         title=dict(text=title, font=dict(size=13,color="#f0f4ff",family=FONT),
                    x=0, xanchor="left", pad=dict(l=10,t=6)),
         paper_bgcolor=BG, plot_bgcolor=BG,
         font=dict(color=MUTED,family=FONT,size=11),
         height=height,
-        margin=dict(t=52,b=38,l=52,r=18),
+        margin=dict(t=52, b=38, l=30, r=30), 
         legend=dict(bgcolor="rgba(0,0,0,0)",font=dict(size=10,color="#c4caed")),
         hoverlabel=dict(bgcolor="#1a1f3a",font_size=12,font_family=FONT),
     )
@@ -275,18 +318,22 @@ app_ui = ui.page_fluid(
         )
     ),
 
-    # 6 Charts — 2-column grid, chart 4 spans full width
+    # 6 Charts — arranged to match the wireframe layout
     ui.div(
-        # Row 1
-        ui.div(output_widget("chart_1_outcome_dist"),  class_="chart-card"),
-        ui.div(output_widget("chart_2_live_by_species"),class_="chart-card"),
-        # Row 2
-        ui.div(output_widget("chart_3_adoption_condition"),class_="chart-card"),
-        ui.div(output_widget("chart_5_los_outcome"),   class_="chart-card"),
-        # Row 3 — chart 4 (heatmap) full width, chart 6 half
-        ui.div(output_widget("chart_4_intake_outcome_heatmap"), class_="chart-card chart-card-full"),
+        # Row 1: Chart 1 (Donut) - Full Width
+        ui.div(output_widget("chart_1_outcome_dist"), class_="chart-card chart-card-full"),
+        
+        # Row 2: Charts 2 & 3 - Side by Side
+        ui.div(output_widget("chart_2_live_by_species"), class_="chart-card"),
+        ui.div(output_widget("chart_3_adoption_condition"), class_="chart-card"),
+        
+        # Row 3: Charts 5 & 6 - Side by Side
+        ui.div(output_widget("chart_5_los_outcome"), class_="chart-card"),
         ui.div(output_widget("chart_6_adoption_age"), class_="chart-card"),
-        ui.div(style=""),   # empty cell to balance grid
+        
+        # Row 4: Chart 4 (Heatmap) - Full Width
+        ui.div(output_widget("chart_4_intake_outcome_heatmap"), class_="chart-card chart-card-full"),
+        
         class_="charts-grid"
     ),
 )
@@ -340,16 +387,38 @@ def server(input, output, session):
     def chart_1_outcome_dist():
         top = dff()["Outcome Type"].value_counts().reset_index()
         top.columns = ["Outcome","Count"]
+        
+        # FIX: Keep the Top 9 categories, group all the tiny ones into "Other"
+        # This stops the donut from shrinking and removes the scrollbar from the legend
+        if len(top) > 10:
+            other_count = top.iloc[9:]["Count"].sum()
+            top = top.iloc[:9].copy()
+            top.loc[len(top)] = ["Other", other_count]
+            
         top["Pct"] = (top["Count"] / top["Count"].sum() * 100).round(1)
+        
         fig = px.pie(top, names="Outcome", values="Count", hole=0.48,
                      color_discrete_sequence=ACCENT,
                      custom_data=["Pct"])
+                     
         fig.update_traces(
             textposition="outside", textinfo="label+percent",
             textfont=dict(size=10, family=FONT),
             marker=dict(line=dict(color="rgba(6,9,26,0.8)", width=2)),
             hovertemplate="<b>%{label}</b><br>Count: %{value:,}<br>Share: %{customdata[0]:.1f}%<extra></extra>"
         )
+        
+        fig.update_layout(
+            legend=dict(
+                x=1.5,            # Position just outside the right edge of the chart
+                y=0.5,             # Center vertically
+                yanchor="middle",  
+                xanchor="left"     
+            ),
+            
+            margin=dict(l=140, r=140) 
+        )
+        
         return dl(fig, "Chart 1 — Outcome Type Distribution")
 
     # ── CHART 2: Live Release Rate by Animal Type ────────────────────────────
