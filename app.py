@@ -270,30 +270,23 @@ body::before {
 
 /* ── CHART BODY ── */
 .chart-body {
-  padding: 16px; width: 100%; flex: 1;
+  padding: 16px; 
+  width: 100%; 
+  flex: 1;
   background: var(--bg-card);
-  display: block; 
-  overflow: hidden; min-height: 0;
-}
-.chart-body .html-widget {
-  width: 100% !important;
-  height: 100% !important;
+  overflow: hidden; 
 }
 
-/* Ensure Plotly stretches out fully */
-#chart_1_outcome_dist svg.main-svg,
-#chart_1_outcome_dist .js-plotly-plot,
-#chart_1_outcome_dist .plot-container,
-#chart_1_outcome_dist .plotly,
-#chart_7_seasonal svg.main-svg,
-#chart_7_seasonal .js-plotly-plot,
-#chart_7_seasonal .plot-container,
-#chart_7_seasonal .plotly,
-#chart_4_intake_outcome_heatmap svg.main-svg,
-#chart_4_intake_outcome_heatmap .js-plotly-plot,
-#chart_4_intake_outcome_heatmap .plot-container,
-#chart_4_intake_outcome_heatmap .plotly {
-  width: 100% !important; height: 100% !important;
+/* Let the wrappers stretch, but don't force flex or block on them */
+.chart-body > div, 
+.html-widget {
+  width: 100% !important;
+}
+
+/* Remove all manual margins and sizing from Plotly containers */
+.js-plotly-plot, 
+.plot-container {
+  width: 100% !important;
 }
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -352,23 +345,32 @@ app_ui = ui.page_fluid(
         ui.tags.style(CSS),
         # ---> PASTE THIS NEW SCRIPT HERE <---
         ui.tags.script("""
-            // The dashboard data takes a few seconds to load. 
-            // This loop forces the browser to recalculate the layout every 800ms
-            // simulating a "layout update" (like clicking Box Select) automatically.
-            let autoResizer = setInterval(function() {
-                window.dispatchEvent(new Event('resize'));
-                
-                // Also explicitly tell Plotly to remeasure if accessible
-                document.querySelectorAll('.js-plotly-plot').forEach(function(plot) {
-                    if (window.Plotly) { window.Plotly.Plots.resize(plot); }
+            // The Nuclear Plotly Resizer
+            function forcePlotlyResize() {
+                // Find every Plotly chart on the page
+                document.querySelectorAll('.js-plotly-plot').forEach(function(el) {
+                    // Get the exact pixel width of the card it lives inside
+                    let parentWidth = el.parentElement.clientWidth;
+                    
+                    // If Plotly is loaded and the card actually has a width, force Plotly to match it
+                    if (parentWidth > 100 && window.Plotly) {
+                        Plotly.relayout(el, {width: parentWidth});
+                    }
                 });
-            }, 800);
+            }
 
-            // Stop the loop after 10 seconds (plenty of time for charts to finish appearing)
-            setTimeout(function() {
-                clearInterval(autoResizer);
-            }, 10000);
-        """)
+            // The data takes a few seconds to load. 
+            // This runs our forced resize every 500 milliseconds for the first 5 seconds.
+            let attempts = 0;
+            let forceResize = setInterval(function() {
+                forcePlotlyResize();
+                attempts++;
+                if (attempts > 10) clearInterval(forceResize);
+            }, 500);
+
+            // Also keep it snappy if the user manually resizes their browser window
+            window.addEventListener('resize', forcePlotlyResize);
+        """),
         # ------------------------------------
     ),
 
