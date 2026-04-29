@@ -431,15 +431,14 @@ app_ui = ui.page_fluid(
 
     # ── CHARTS GRID (2-Column Cards Only) ─────
     ui.div(
-
-        # Row 1: Chart 1 (left) + Chart 7 (right)
+        # Row 1
         ui.div(
             ui.div(
                 ui.HTML('<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,0.85)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.88-11.71L10 14.17l-1.88-1.88a.996.996 0 1 0-1.41 1.41l2.59 2.59c.39.39 1.02.39 1.41 0L17.3 9.7a.996.996 0 0 0 0-1.41c-.39-.39-1.03-.39-1.42 0z"/></svg>'),
                 " Chart 1 — Outcome Type Distribution",
                 class_="chart-header"
             ),
-            ui.div(output_widget("chart_1_outcome_dist"), class_="chart-body"),
+            ui.div(output_widget("chart_1_outcome_dist", width="100%", height="430px"), class_="chart-body"),
             class_="chart-card"
         ),
         ui.div(
@@ -448,18 +447,18 @@ app_ui = ui.page_fluid(
                 " Chart 7 — Seasonal Intake vs. Live Release Rate",
                 class_="chart-header"
             ),
-            ui.div(output_widget("chart_7_seasonal"), class_="chart-body"),
+            ui.div(output_widget("chart_7_seasonal", width="100%", height="430px"), class_="chart-body"),
             class_="chart-card"
         ),
 
-        # Row 2: Charts 2 & 3
+        # Row 2
         ui.div(
             ui.div(
                 ui.HTML('<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,0.85)"><path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/></svg>'),
                 " Chart 2 — Live Release Rate by Species",
                 class_="chart-header"
             ),
-            ui.div(output_widget("chart_2_live_by_species"), class_="chart-body"),
+            ui.div(output_widget("chart_2_live_by_species", width="100%", height="380px"), class_="chart-body"),
             class_="chart-card"
         ),
         ui.div(
@@ -468,18 +467,18 @@ app_ui = ui.page_fluid(
                 " Chart 3 — Adoption & Live Release by Condition",
                 class_="chart-header"
             ),
-            ui.div(output_widget("chart_3_adoption_condition"), class_="chart-body"),
+            ui.div(output_widget("chart_3_adoption_condition", width="100%", height="380px"), class_="chart-body"),
             class_="chart-card"
         ),
 
-        # Row 3: Charts 5 & 6
+        # Row 3
         ui.div(
             ui.div(
                 ui.HTML('<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,0.85)"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>'),
                 " Chart 5 — Length of Stay Distribution by Outcome",
                 class_="chart-header"
             ),
-            ui.div(output_widget("chart_5_los_outcome"), class_="chart-body"),
+            ui.div(output_widget("chart_5_los_outcome", width="100%", height="380px"), class_="chart-body"),
             class_="chart-card"
         ),
         ui.div(
@@ -488,32 +487,29 @@ app_ui = ui.page_fluid(
                 " Chart 6 — Adoption Rate by Age Group",
                 class_="chart-header"
             ),
-            ui.div(output_widget("chart_6_adoption_age"), class_="chart-body"),
+            ui.div(output_widget("chart_6_adoption_age", width="100%", height="380px"), class_="chart-body"),
             class_="chart-card"
         ),
 
         class_="charts-grid"
-    ), # <--- THIS CLOSES THE GRID. Chart 4 is now completely separated.
+    ),
 
-    # ── CHART 4 — FULL WIDTH HEATMAP (Outside the Grid) ────────
+    # ── FULL WIDTH ROW (Heatmap - Placed OUTSIDE the Grid) ──────────
+    # FIX: By placing this outside the CSS Grid, Plotly is no longer victims of
+    # grid initialization race conditions. It will load 100% wide on the very first try.
     ui.div(
         ui.div(
-            ui.HTML('<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,0.85)"><path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 2h2v2h-2V4zm0 4h2v2h-2V8zm-4-4h2v2H8V4zm0 4h2v2H8V8zm-4 0h2v2H4V8zm0-4h2v2H4V4zm0 12H4v-2h2v2zm4 0H8v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V8h2v2z"/></svg>'),
-            " Chart 4 — Intake Type vs. Outcome Type",
-            class_="chart-header"
+            ui.div(
+                ui.HTML('<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,0.85)"><path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 2h2v2h-2V4zm0 4h2v2h-2V8zm-4-4h2v2H8V4zm0 4h2v2H8V8zm-4 0h2v2H4V8zm0-4h2v2H4V4zm0 12H4v-2h2v2zm4 0H8v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V8h2v2z"/></svg>'),
+                " Chart 4 — Intake Type vs. Outcome Type",
+                class_="chart-header"
+            ),
+            ui.div(output_widget("chart_4_intake_outcome_heatmap", width="100%", height="620px"), class_="chart-body"),
+            class_="chart-card"
         ),
-        ui.div(
-            output_widget("chart_4_intake_outcome_heatmap", width="100%", height="620px"), 
-            class_="chart-body",
-            # Force inner block to stretch 100% unconditionally
-            style="display: block; width: 100%; min-width: 100%; padding: 16px;" 
-        ),
-        class_="chart-card",
-        # Keep same margins as grid, but explicitly override it to act as a standalone block
-        style="margin: 0 40px 40px 40px; display: block; width: calc(100% - 80px);" 
-    )
-
-) # <--- THIS CLOSES app_ui
+        class_="full-width-row"
+    ),
+)
 
 # ─────────────────────────────────────────────
 # SERVER
