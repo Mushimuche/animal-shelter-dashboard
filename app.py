@@ -15,7 +15,9 @@ from shinywidgets import output_widget, render_widget
 # ─────────────────────────────────────────────
 
 def load_and_clean(path: str) -> pd.DataFrame:
-    df = pd.read_csv(path, low_memory=False)
+    # 1. Read the parquet file instead of CSV
+    df = pd.read_parquet(path)
+    
     df["Intake Date"]  = pd.to_datetime(df["Intake Date"],  errors="coerce")
     df["Outcome Date"] = pd.to_datetime(df["Outcome Date"], errors="coerce")
     df["DOB"]          = pd.to_datetime(df["DOB"],          errors="coerce")
@@ -37,8 +39,9 @@ def load_and_clean(path: str) -> pd.DataFrame:
     df = df[df["intake_year"] >= 2017]
     return df
 
-CSV_PATH = "https://github.com/Mushimuche/animal-shelter-dashboard/raw/refs/heads/main/animal-shelter-intakes-and-outcomes.csv"
-df_full  = load_and_clean(CSV_PATH)
+# 2. Point directly to your new local Parquet file
+LOCAL_PARQUET_PATH = "animal-shelter.parquet"
+df_full  = load_and_clean(LOCAL_PARQUET_PATH)
 
 ANIMAL_TYPES = ["All"] + sorted(df_full["Animal Type"].unique().tolist())
 YEARS        =["All"] + sorted(df_full["intake_year"].dropna().astype(int).unique().tolist(), reverse=True)
